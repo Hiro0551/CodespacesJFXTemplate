@@ -1,97 +1,87 @@
 package edu.sdccd.cisc;
 
+//TODO: import javafx libraries
 import javafx.application.Application;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
-import javafx.util.converter.LocalDateStringConverter;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 public class Main extends Application {
 
-    private final ObservableList<Dog> data = FXCollections.observableArrayList(
-            new Dog("Rover", "Labrador", LocalDate.of(2018, 3, 14)),
-            new Dog("Bella", "Corgi", LocalDate.of(2020, 7, 4)),
-            new Dog("Max", "Border Collie", LocalDate.of(2019, 12, 2))
-    );
-
     @Override
     public void start(Stage stage) {
-        stage.setTitle("Dogs!");
+        // TODO: title
+        stage.setTitle("Message Board");
 
-        TableView<Dog> table = new TableView<>(data);
-        table.setEditable(true);
+        // TODO: header
+        Label header = new Label("Message Board");
+        header.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
-        TableColumn<Dog, String> nameCol = new TableColumn<>("Name");
-        nameCol.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getName()));
-        nameCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        nameCol.setOnEditCommit(e -> e.getRowValue().setName(e.getNewValue()));
-        nameCol.setPrefWidth(160);
+        // TODO: status label
+        Label status = new Label("Ready");
 
-        TableColumn<Dog, String> breedCol = new TableColumn<>("Breed");
-        breedCol.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getBreed()));
-        breedCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        breedCol.setOnEditCommit(e -> e.getRowValue().setBreed(e.getNewValue()));
-        breedCol.setPrefWidth(180);
+        // TODO: Input row: TextField + Add button
+        TextField inputField = new TextField();
+        inputField.setPromptText("Enter a message...");
+        Button addBtn = new Button("Add Message");
+        HBox inputRow = new HBox(10, inputField, addBtn);
+        inputRow.setPadding(new Insets(5, 0, 5, 0));
 
-        DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_DATE;
-        StringConverter<LocalDate> dateConv = new LocalDateStringConverter(fmt, fmt);
-        TableColumn<Dog, LocalDate> dobCol = new TableColumn<>("Date of Birth");
-        dobCol.setCellValueFactory(cd -> new SimpleObjectProperty<>(cd.getValue().getDob()));
-        dobCol.setCellFactory(col -> new DatePickerTableCell(dateConv));
-        dobCol.setPrefWidth(160);
+        // TODO: prompt for message
+        // (Handled via inputField.setPromptText above)
 
-        table.getColumns().addAll(nameCol, breedCol, dobCol);
+        // TODO: add button
+        // (Created above as addBtn)
 
-        Button addBtn = new Button("Add");
-        Button editBtn = new Button("Edit…");
-        Button delBtn = new Button("Delete");
-        HBox toolbar = new HBox(8, addBtn, editBtn, delBtn);
-        toolbar.setPadding(new Insets(10));
+        // TODO: reset button
+        Button resetBtn = new Button("Reset");
 
+        // TODO: message history area
+        TextArea historyArea = new TextArea();
+        historyArea.setEditable(false);
+        historyArea.setWrapText(true);
+        VBox.setVgrow(historyArea, Priority.ALWAYS);
+
+        // TODO: Wire up the Add button.
+        // - If input text is empty or blank: set status to "Nothing to add" and return.
+        // - Otherwise: append text to history (one line per message),
+        //              clear the input field,
+        //              set status to "Last action: added message".
         addBtn.setOnAction(e -> {
-            Dog created = DogDialog.show(stage, null);
-            if (created != null) data.add(created);
-        });
-        editBtn.setOnAction(e -> {
-            Dog selected = table.getSelectionModel().getSelectedItem();
-            if (selected == null) { info("Select a dog to edit."); return; }
-            Dog edited = DogDialog.show(stage, selected);
-            if (edited != null) {
-                selected.setName(edited.getName());
-                selected.setBreed(edited.getBreed());
-                selected.setDob(edited.getDob());
-                table.refresh();
+            String text = inputField.getText().trim();
+            if (text.isEmpty()) {
+                status.setText("Nothing to add");
+                return;
             }
-        });
-        delBtn.setOnAction(e -> {
-            Dog selected = table.getSelectionModel().getSelectedItem();
-            if (selected == null) { info("Select a dog to delete."); return; }
-            data.remove(selected);
+            historyArea.appendText(text + "\n");
+            inputField.clear();
+            status.setText("Last action: added message");
         });
 
-        BorderPane root = new BorderPane(table);
-        root.setTop(toolbar);
-        Scene scene = new Scene(root, 640, 380);
+        // TODO: Wire up the Reset button.
+        // - Clear history and input.
+        // - Set status to "Cleared".
+        resetBtn.setOnAction(e -> {
+            inputField.clear();
+            historyArea.clear();
+            status.setText("Cleared");
+        });
+
+        // TODO: add content to root
+        VBox root = new VBox(10, header, status, inputRow, resetBtn, historyArea);
+        root.setPadding(new Insets(15));
+
+        // TODO: set scene and show stage
+        Scene scene = new Scene(root, 420, 320);
         stage.setScene(scene);
+        stage.setMinWidth(400);
+        stage.setMinHeight(300);
         stage.show();
     }
 
-    private void info(String msg) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK);
-        a.showAndWait();
+    public static void main(String[] args) {
+        launch(args);
     }
-
-    public static void main(String[] args) { launch(args); }
 }
